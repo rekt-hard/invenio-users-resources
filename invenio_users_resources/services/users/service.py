@@ -4,6 +4,7 @@
 # Copyright (C) 2022 TU Wien.
 # Copyright (C) 2022 European Union.
 # Copyright (C) 2022 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Users-Resources is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License; see LICENSE file for more
@@ -12,6 +13,7 @@
 """Users service."""
 
 from elasticsearch_dsl.query import Q
+from flask import current_app
 from invenio_accounts.models import User
 from invenio_records_resources.resources.errors import PermissionDeniedError
 from invenio_records_resources.services import RecordService
@@ -63,11 +65,15 @@ class UsersService(RecordService):
 
     def search(self, identity, params=None, es_preference=None, **kwargs):
         """Search for records matching the querystring."""
+        extra_filters = [Q("term", active=True)]
+        if current_app.config["SECURITY_CONFIRMABLE"]:
+            extra_filters.append(Q("term", confirmed=True))
+
         return super().search(
             identity,
             params=params,
             es_preference=es_preference,
-            extra_filter=Q("term", active=True) & Q("term", confirmed=True),
+            extra_filter=Q("bool", must=extra_filters),
             **kwargs,
         )
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2022 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Users-Resources is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License; see LICENSE file for more
@@ -9,6 +10,7 @@
 """User service tests."""
 
 import pytest
+from flask import current_app
 from invenio_records_resources.services.errors import PermissionDeniedError
 
 
@@ -31,6 +33,19 @@ def test_search_restricted(user_service, anon_identity, user_pub):
 
 def test_search_public_users(user_service, user_pub):
     """Only public users are shown in search."""
+    res = user_service.search(user_pub.identity).to_dict()
+    assert res["hits"]["total"] == 2  # 2 public users in conftest
+
+
+def test_search_confirmable(user_service, user_pub):
+    """Ensure user search is config agnostic."""
+    # Fetching unconfirmed users as well
+    current_app.config["SECURITY_CONFIRMABLE"] = False
+    res = user_service.search(user_pub.identity).to_dict()
+    assert res["hits"]["total"] == 3  # 3 public users in conftest
+
+    # Fetching confirmed users only
+    current_app.config["SECURITY_CONFIRMABLE"] = True
     res = user_service.search(user_pub.identity).to_dict()
     assert res["hits"]["total"] == 2  # 2 public users in conftest
 

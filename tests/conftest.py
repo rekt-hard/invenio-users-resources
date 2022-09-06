@@ -132,6 +132,10 @@ def users_data():
             "username": "unconfirmed",
             "email": "unconfirmed@inveniosoftware.org",
             "confirmed": False,
+            "preferences": {
+                "visibility": "public",
+                "email_visibility": "public",
+            },
         },
         {
             "username": "inactive",
